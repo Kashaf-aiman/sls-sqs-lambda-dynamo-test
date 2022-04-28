@@ -1,0 +1,82 @@
+service: sls-sqs-dynamo
+
+custom: 
+  settings:
+    ACCOUNT_ID: "441317258782"
+    DYNAMODB_DLQ_TABLE: ${self:service}-DLQTable-${sls:stage}
+
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  region: us-east-1
+  environment: ${self:custom.settings}
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "sqs:*"
+      Resource: "arn:aws:sqs:${self:provider.region}:*:MyQueue"
+    - Effect: "Allow"
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+      Resource: "*"
+
+plugins:
+  - serverless-offline
+
+functions:
+  hello:
+    handler: handler.hello
+    events:
+      - http:
+          path: send
+          method: get
+  sqsConsume: 
+    handler: handler.sqsConsume
+    events: 
+      - sqs:
+          arn: 
+            Fn::GetAtt:
+              - MyQueue
+              - Arn
+          batchSize: 10
+  saveDynamo:
+    handler: handler.saveDynamo
+    events:
+      - sqs: 
+          arn:
+            Fn::GetAtt:
+              - MyDLQQueue
+              - Arn
+          
+resources: 
+  Resources: 
+    MyQueue:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        RedrivePolicy:
+          deadLetterTargetArn: arn:aws:sqs:us-east-1:441317258782:MyDLQQueue
+          maxReceiveCount: 3
+        QueueName: "MyQueue"
+    
+    MyDLQQueue:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: "MyDLQQueue"
+
+    DLQTable: 
+      Type: AWS::DynamoDB::Table
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: "id"
+            AttributeType: "S"
+        BillingMode: PAY_PER_REQUEST
+        KeySchema:
+          - AttributeName: "id"
+            KeyType: "HASH"
+        TableName: ${self:service}-DLQTable-${sls:stage}
