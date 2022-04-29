@@ -30,8 +30,8 @@ plugins:
   - serverless-offline
 
 functions:
-  hello:
-    handler: handler.hello
+  sqsProduce:
+    handler: handler.sqsProduce
     events:
       - http:
           path: send

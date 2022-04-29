@@ -9,8 +9,9 @@ const AWS_ACCOUNT = process.env.ACCOUNT_ID;
 const QUEUE_URL = `https://sqs.us-east-1.amazonaws.com/${AWS_ACCOUNT}/MyQueue`;
 
 
- // Flood SQS Queue
-module.exports.hello= async (event) => {
+//Lambda 1
+ // Produce message
+module.exports.sqsProduce= async (event) => {
   for (let i=0; i<10; i++) {
       await SQS.sendMessageBatch({ Entries: flooder(), QueueUrl: QUEUE_URL }).promise()
   }
@@ -27,31 +28,33 @@ const flooder = () => {
   return entries
   }
 
-let counter = 1
-let messageCount = 0
-let funcId = 'id'+parseInt(Math.random()*1000)
 
-//consume message
+
+  //lambda 2
+  //consume message
+  let messageCount = 0
 
 module.exports.sqsConsume = async (event) => {
     
-    const random = Math.random();
-    
+  const random = Math.random();
+
+// Record number of messages received
     if (event.Records) {
         messageCount += event.Records.length
     }
-// Record number of messages received
+//error logic
     if (random > 0.5) {
       const err = new Error('Im an error!')
       throw err
   }
-    console.log(funcId + ' REUSE: ', counter++)
+
     console.log('Message Count: ', messageCount)
     console.log(JSON.stringify(event))
-    // return 'done'
+    
 };
 
-
+//lambda 3
+//Save failed messages to DynamoDB
 module.exports.saveDynamo = async (event) => {
   try{
     const { Records } = event;
