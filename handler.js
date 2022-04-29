@@ -34,13 +34,13 @@ let funcId = 'id'+parseInt(Math.random()*1000)
 //consume message
 
 module.exports.sqsConsume = async (event) => {
-    // Record number of messages received
+    
     const random = Math.random();
     
     if (event.Records) {
         messageCount += event.Records.length
     }
-
+// Record number of messages received
     if (random > 0.5) {
       const err = new Error('Im an error!')
       throw err
