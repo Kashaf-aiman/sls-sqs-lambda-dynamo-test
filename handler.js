@@ -17,7 +17,6 @@ module.exports.sqsProduce= async (event) => {
       await SQS.sendMessageBatch({ 
           Entries: flooder(),
           QueueUrl: QUEUE_URL,
-         
         }).promise();
   }
   return 'done'
@@ -28,7 +27,6 @@ const flooder = () => {
       entries.push({
         Id: 'id'+parseInt(Math.random()*1000000),
         MessageBody: 'value'+ Math.random(),
-       
       })
   }
   return entries
@@ -42,7 +40,6 @@ module.exports.sqsConsume = async (event) => {
 
   const recvCount = process.env.maxReceiveCount;
   
-
   try{
         let random = Math.random();
       // Record number of messages received
@@ -60,11 +57,13 @@ module.exports.sqsConsume = async (event) => {
 
   catch(err) {
         //backoff logic
-          let count = 0;
-          count++;
-          if(count <= recvCount){
+          // let count = 0;
+          // count++;
+          let retries = event.Records[0].attributes.ApproximateReceiveCount;
+          console.log(retries);
+          if(retries <= recvCount){
             let jitter = Math.floor((Math.random() * 60) + 1);
-            let backoff = Math.pow(2, count) + 30 + jitter; 
+            let backoff = Math.pow(2, retries) + 30 + jitter; 
           
             let reciept = event.Records.receiptHandle;
             var params = {
@@ -76,12 +75,10 @@ module.exports.sqsConsume = async (event) => {
               if (err) console.log(err, err.stack); // an error occurred
               else console.log(data);           // successful response
             });
-           
           }
           else{
             console.log(err);
           }
-       
   }
 
 };
