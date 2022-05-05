@@ -39,7 +39,9 @@ let messageCount = 0
 module.exports.sqsConsume = async (event) => { 
 
   const recvCount = process.env.maxReceiveCount;
-  
+
+  for(let i=0;i<event.Records.length;i++) {
+
   try{
         let random = Math.random();
       // Record number of messages received
@@ -49,7 +51,7 @@ module.exports.sqsConsume = async (event) => {
       //error logic
           if (random > 0.5) {
             const err = new Error('Im an error2!')
-            throw err
+            throw err;
         }
           console.log('Message Count: ', messageCount)
           console.log(JSON.stringify(event))
@@ -59,13 +61,14 @@ module.exports.sqsConsume = async (event) => {
         //backoff logic
           // let count = 0;
           // count++;
-          let retries = event.Records[0].attributes.ApproximateReceiveCount;
+          let retries = event.Records[i].attributes.ApproximateReceiveCount;
           console.log(retries);
+          
           if(retries <= recvCount){
             let jitter = Math.floor((Math.random() * 60) + 1);
             let backoff = Math.pow(2, retries) + 30 + jitter; 
           
-            let reciept = event.Records.receiptHandle;
+            let reciept = event.Records[i].receiptHandle;
             var params = {
               QueueUrl: QUEUE_URL, 
               ReceiptHandle: reciept,
@@ -76,9 +79,12 @@ module.exports.sqsConsume = async (event) => {
               else console.log(data);           // successful response
             });
           }
+
           else{
             console.log(err);
           }
+        }
+          
   }
 
 };
