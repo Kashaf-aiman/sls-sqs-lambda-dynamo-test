@@ -31,13 +31,15 @@ plugins:
 
 functions:
   sqsProduce:
-    handler: handler.sqsProduce
+    handler: Producer.sqsProduce
+    description: Produces 100 message in one api call
     events:
       - http:
           path: send
           method: get
   sqsConsume: 
-    handler: handler.sqsConsume
+    handler: Consumer.sqsConsume
+    description: Consume messages from main queue and handle error
     events: 
       - sqs:
           arn: 
@@ -46,7 +48,8 @@ functions:
               - Arn
           batchSize: 10
   saveDynamo:
-    handler: handler.saveDynamo
+    handler: DynamoDb.saveDynamo
+    description: save DLQ data to dynamodb
     events:
       - sqs: 
           arn:
