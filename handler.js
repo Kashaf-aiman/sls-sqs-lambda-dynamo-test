@@ -12,8 +12,13 @@ const QUEUE_URL = `https://sqs.us-east-1.amazonaws.com/${AWS_ACCOUNT}/MyQueue`;
 //Lambda 1
  // Produce message
 module.exports.sqsProduce= async (event) => {
+  
   for (let i=0; i<10; i++) {
-      await SQS.sendMessageBatch({ Entries: flooder(), QueueUrl: QUEUE_URL }).promise()
+      await SQS.sendMessageBatch({ 
+          Entries: flooder(),
+          QueueUrl: QUEUE_URL,
+         
+        }).promise();
   }
   return 'done'
 }
@@ -22,35 +27,63 @@ const flooder = () => {
   for (let i=0; i<10; i++) {
       entries.push({
         Id: 'id'+parseInt(Math.random()*1000000),
-        MessageBody: 'value'+Math.random()
+        MessageBody: 'value'+ Math.random(),
+       
       })
   }
   return entries
   }
 
 
-
   //lambda 2
   //consume message
-  let messageCount = 0
+let messageCount = 0
+module.exports.sqsConsume = async (event) => { 
 
-module.exports.sqsConsume = async (event) => {
-    
-  const random = Math.random();
+  const recvCount = process.env.maxReceiveCount;
+  
 
-// Record number of messages received
-    if (event.Records) {
-        messageCount += event.Records.length
-    }
-//error logic
-    if (random > 0.5) {
-      const err = new Error('Im an error!')
-      throw err
+  try{
+        let random = Math.random();
+      // Record number of messages received
+          if (event.Records) {
+              messageCount += event.Records.length
+          }
+      //error logic
+          if (random > 0.5) {
+            const err = new Error('Im an error2!')
+            throw err
+        }
+          console.log('Message Count: ', messageCount)
+          console.log(JSON.stringify(event))
   }
 
-    console.log('Message Count: ', messageCount)
-    console.log(JSON.stringify(event))
-    
+  catch(err) {
+        //backoff logic
+          let count = 0;
+          count++;
+          if(count <= recvCount){
+            let jitter = Math.floor((Math.random() * 60) + 1);
+            let backoff = Math.pow(2, count) + 30 + jitter; 
+          
+            let reciept = event.Records.receiptHandle;
+            var params = {
+              QueueUrl: QUEUE_URL, 
+              ReceiptHandle: reciept,
+              VisibilityTimeout: parseInt(backoff) 
+            };
+            SQS.changeMessageVisibility(params , function(err, data) {
+              if (err) console.log(err, err.stack); // an error occurred
+              else console.log(data);           // successful response
+            });
+           
+          }
+          else{
+            console.log(err);
+          }
+       
+  }
+
 };
 
 //lambda 3

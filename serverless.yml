@@ -4,7 +4,7 @@ custom:
   settings:
     ACCOUNT_ID: "441317258782"
     DYNAMODB_DLQ_TABLE: ${self:service}-DLQTable-${sls:stage}
-
+    maxReceiveCount: 3
 
 frameworkVersion: '3'
 
