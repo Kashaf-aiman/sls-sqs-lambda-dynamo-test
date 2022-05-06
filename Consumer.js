@@ -21,7 +21,7 @@ let retries = event.Records[0].attributes.ApproximateReceiveCount;
     }
     if(error()){
         changeMessageVisibility(retries, recvCount, QUEUE_URL, receipt);
-        // throw new Error('error');
+        throw new Error('error');
     }
     console.log('Message Count: ', messageCount)
     console.log(JSON.stringify(event))
