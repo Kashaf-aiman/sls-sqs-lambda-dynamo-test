@@ -4,6 +4,7 @@ var SQS = new AWS.SQS();
 
 
 const changeMessageVisibility = (retries, maxRetryCount, queue_url, receipt) => {
+    
 
     if(retries <= maxRetryCount) {
         var params = {
@@ -11,7 +12,11 @@ const changeMessageVisibility = (retries, maxRetryCount, queue_url, receipt) => 
             ReceiptHandle: receipt,
             VisibilityTimeout: parseInt(Backoff(retries)) 
         };
+        // SQS.changeMessageVisibility(params);
         SQS.changeMessageVisibility(params);
+        // console.log(visibilityData);
+        // console.log("receipt:", receipt);
+        // console.log("retries:", retries);
     }
     else{
         throw new Error("Failed after 3 retries");

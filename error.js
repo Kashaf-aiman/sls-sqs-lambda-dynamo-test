@@ -1,9 +1,9 @@
 const error = () => {
     let random = Math.random();
     if (random > 0.5) {
-        return true;
+        const err = new Error('Retry count exausted')
+        throw err;
     }
-    return false;
 }
 
 module.exports = error;

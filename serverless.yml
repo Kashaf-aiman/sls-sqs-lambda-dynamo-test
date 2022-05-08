@@ -64,7 +64,7 @@ resources:
       Properties:
         RedrivePolicy:
           deadLetterTargetArn: arn:aws:sqs:us-east-1:441317258782:MyDLQQueue
-          maxReceiveCount: 3
+          maxReceiveCount: 4
         QueueName: "MyQueue"
     
     MyDLQQueue:

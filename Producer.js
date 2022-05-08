@@ -19,10 +19,10 @@ module.exports.sqsProduce= async (event) => {
 }
 
 
-const flooder = () => {
+const flooder =  () => {
   let entries = []
-  for (let i=0; i<10; i++) {
-      entries.push({
+  for (let i=0; i<2; i++) {
+     entries.push({
         Id: 'id'+parseInt(Math.random()*1000000),
         MessageBody: 'value'+ Math.random(),
       })
