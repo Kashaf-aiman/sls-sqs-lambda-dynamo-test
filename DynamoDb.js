@@ -20,6 +20,7 @@ module.exports.saveDynamo = async (event) => {
                 updatedAt: new Date().getTime()  
             }
         };
+            console.log(JSON.stringify(params));
             await dynamoDb.put(params).promise();
         
             console.log('Successfully written to DynamoDB');

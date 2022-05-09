@@ -21,9 +21,9 @@ module.exports.sqsProduce= async (event) => {
 
 const flooder =  () => {
   let entries = []
-  for (let i=0; i<2; i++) {
+  for (let i=0; i<10; i++) {
      entries.push({
-        Id: 'id'+parseInt(Math.random()*1000000),
+        Id: 'id'+parseInt(Math.random()*10000),
         MessageBody: 'value'+ Math.random(),
       })
   }

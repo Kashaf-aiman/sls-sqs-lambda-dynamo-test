@@ -1,8 +1,7 @@
 const error = () => {
     let random = Math.random();
     if (random > 0.5) {
-        const err = new Error('Retry count exausted')
-        throw err;
+       return true;
     }
 }
 
