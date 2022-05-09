@@ -22,13 +22,13 @@ module.exports.sqsConsume = async (event) => {
         let retries = Records[i].attributes.ApproximateReceiveCount;
         
                 if(error()){
-                    if(retries <= recvCount) {
+                    if(retries < recvCount) {
                         var params = {
                             QueueUrl: QUEUE_URL, 
                             ReceiptHandle: receipt,
                             VisibilityTimeout: parseInt(Backoff(retries)) 
                         };
-                        console.log(params);
+                        console.log(JSON.stringify(params));
                         let check = await SQS.changeMessageVisibility(params).promise();
                         console.log(check);
                     }
