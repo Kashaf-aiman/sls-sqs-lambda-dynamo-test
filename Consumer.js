@@ -1,7 +1,7 @@
 'use strict';
 
 const Backoff = require('./Backoff.js');
-const error = require("./error.js");
+// const error = require("./error.js");
 // const changeMessageVisibility = require('./ChangeVissibilityTime.js');
 
 const AWS = require('aws-sdk');
@@ -16,52 +16,59 @@ const recvCount = process.env.MAX_RETRY;
 module.exports.sqsConsume = async (event) => { 
 
     const { Records } = event;
+    
+    let random = Math.random();
+
+    if(random <= 0.7 || Records.length == 0){
+        console.log("Success");
+        console.log(Records);
+        return;
+    }
 
     for(let i=0;i<Records.length ;i++) {
         let receipt = Records[i].receiptHandle;
-        let retries = Records[i].attributes.ApproximateReceiveCount;
-        
-                if(error()){
-                    if(retries < recvCount) {
-                        var params = {
-                            QueueUrl: QUEUE_URL, 
-                            ReceiptHandle: receipt,
-                            VisibilityTimeout: parseInt(Backoff(retries)) 
-                        };
-                        console.log(JSON.stringify(params));
-                        let check = await SQS.changeMessageVisibility(params).promise();
-                        console.log(check);
-                    }
-                    else{
-                        throw new Error("Failed after 3 retries");
-                    }
+        let retries = Records[i].messageAttributes.reAtempts.stringValue;
 
-                    throw new Error(`error: Error for ${retries} try`);
+        if(retries < recvCount)  {
+            const sendparams = {
+                DelaySeconds: Backoff(retries),
+                QueueUrl: QUEUE_URL,
+                MessageBody:Records[i].body,
+                MessageAttributes: {
+                    reAtempts: {
+                        DataType: "String",
+                        StringValue: (1 + parseInt(retries)).toString()
+                    }
                 }
-        console.log('successfully processed')
-        console.log(JSON.stringify(Records[i]));
+            }
+            const reSend = await SQS.sendMessage(sendparams).promise();
+            const deleteParams = {
+                QueueUrl: QUEUE_URL,
+                ReceiptHandle: receipt,
+            }
+                // deleting message from sqs
+            const Delete = await SQS.deleteMessage(deleteParams).promise();
+            console.log("resend", JSON.stringify(reSend));
+            console.log("Delete", JSON.stringify(Delete));
+        }
+    else{
+        throw new Error("Failed after 3 retries");
     }
-
-};
-
-// if(retries < recvCount) {
-
-//     var params = {
-//         QueueUrl: QUEUE_URL, 
-//         ReceiptHandle: receipt,
-//         VisibilityTimeout: parseInt(Backoff(retries)) 
-//     };
-
-//     const visibilityData = await SQS.changeMessageVisibility(params).promise();
-//     console.log(visibilityData);
-// }
-// else{
-//     console.log('error: retries <= recvCount');
-// }
-// const error = () => {
-//     let random = Math.random();
-//     if (random > 0.5) {
-//         const err = new Error('Retry count exausted')
-//         throw err;
-//     }
-// }
+}
+throw new Error("Failed to process");
+            
+        };
+        
+        
+        
+        //     var params = {
+        //         QueueUrl: QUEUE_URL, 
+        //         ReceiptHandle: receipt,
+        //         VisibilityTimeout: parseInt(Backoff(retries)) 
+        //     };
+        //     console.log(JSON.stringify(params));
+        //     let check = await SQS.changeMessageVisibility(params).promise();
+        //     console.log(check);
+        // }
+        // else{
+        //     

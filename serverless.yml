@@ -37,6 +37,7 @@ functions:
       - http:
           path: send
           method: get
+
   sqsConsume: 
     handler: Consumer.sqsConsume
     description: Consume messages from main queue and handle error
@@ -63,7 +64,10 @@ resources:
       Type: "AWS::SQS::Queue"
       Properties:
         RedrivePolicy:
-          deadLetterTargetArn: arn:aws:sqs:us-east-1:441317258782:MyDLQQueue
+          deadLetterTargetArn: 
+            Fn::GetAtt:
+              - "MyDLQQueue"
+              - "Arn"
           maxReceiveCount: 3
         QueueName: "MyQueue"
     

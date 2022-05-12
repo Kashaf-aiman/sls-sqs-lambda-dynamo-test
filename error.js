@@ -1,6 +1,6 @@
 const error = () => {
     let random = Math.random();
-    if (random > 0.5) {
+    if (random > 0.7) {
        return true;
     }
 }

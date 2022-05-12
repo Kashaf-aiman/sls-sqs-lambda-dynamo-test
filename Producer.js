@@ -9,7 +9,7 @@ const QUEUE_URL = `https://sqs.us-east-1.amazonaws.com/${AWS_ACCOUNT}/MyQueue`;
 
 module.exports.sqsProduce= async (event) => {
   
-  for (let i=0; i<10; i++) {
+  for (let i=0; i<20; i++) {
       await SQS.sendMessageBatch({ 
           Entries: flooder(),
           QueueUrl: QUEUE_URL,
@@ -22,9 +22,15 @@ module.exports.sqsProduce= async (event) => {
 const flooder =  () => {
   let entries = []
   for (let i=0; i<10; i++) {
-     entries.push({
-        Id: 'id'+parseInt(Math.random()*10000),
-        MessageBody: 'value'+ Math.random(),
+    entries.push({
+        Id: 'id'+ parseInt(Math.random()*10000),
+        MessageBody: 'value '+ Math.random(),
+        MessageAttributes: {
+          reAtempts: {
+            DataType: "String",
+            StringValue: "1"
+          }
+        }
       })
   }
   return entries
