@@ -7,7 +7,9 @@ const Backoff = require('./Backoff.js');
 const AWS = require('aws-sdk');
 var SQS = new AWS.SQS();
 const AWS_ACCOUNT = process.env.ACCOUNT_ID;
+const queue_url = `https://sqs.us-east-1.amazonaws.com/${AWS_ACCOUNT}/MyDLQQueue`;
 const QUEUE_URL = `https://sqs.us-east-1.amazonaws.com/${AWS_ACCOUNT}/MyQueue`;
+
 
 // let messageCount = 0;
 const recvCount = process.env.MAX_RETRY;
@@ -21,7 +23,7 @@ module.exports.sqsConsume = async (event) => {
 
     if(random <= 0.7 || Records.length == 0){
         console.log("Success");
-        console.log(Records);
+        console.log(JSON.stringify(Records));
         return;
     }
 
@@ -52,23 +54,28 @@ module.exports.sqsConsume = async (event) => {
             console.log("Delete", JSON.stringify(Delete));
         }
     else{
+        const sendParams = {
+            QueueUrl: queue_url,
+            MessageBody:Records[i].body
+        }
+        const send = await SQS.sendMessage(sendParams).promise();
+        console.log(send);
         throw new Error("Failed after 3 retries");
     }
 }
 throw new Error("Failed to process");
-            
-        };
-        
-        
-        
-        //     var params = {
-        //         QueueUrl: QUEUE_URL, 
-        //         ReceiptHandle: receipt,
-        //         VisibilityTimeout: parseInt(Backoff(retries)) 
-        //     };
-        //     console.log(JSON.stringify(params));
-        //     let check = await SQS.changeMessageVisibility(params).promise();
-        //     console.log(check);
-        // }
-        // else{
-        //     
+};
+
+
+
+//     var params = {
+//         QueueUrl: QUEUE_URL, 
+//         ReceiptHandle: receipt,
+//         VisibilityTimeout: parseInt(Backoff(retries)) 
+//     };
+//     console.log(JSON.stringify(params));
+//     let check = await SQS.changeMessageVisibility(params).promise();
+//     console.log(check);
+// }
+// else{
+//     

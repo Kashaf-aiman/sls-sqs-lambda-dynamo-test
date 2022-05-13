@@ -20,6 +20,10 @@ provider:
       Resource: "arn:aws:sqs:${self:provider.region}:*:MyQueue"
     - Effect: "Allow"
       Action:
+        - "sqs:*"
+      Resource: "arn:aws:sqs:${self:provider.region}:*:MyDLQQueue"
+    - Effect: "Allow"
+      Action:
         - dynamodb:Query
         - dynamodb:Scan
         - dynamodb:GetItem
@@ -63,12 +67,12 @@ resources:
     MyQueue:
       Type: "AWS::SQS::Queue"
       Properties:
-        RedrivePolicy:
-          deadLetterTargetArn: 
-            Fn::GetAtt:
-              - "MyDLQQueue"
-              - "Arn"
-          maxReceiveCount: 3
+        # RedrivePolicy:
+        #   deadLetterTargetArn: 
+        #     Fn::GetAtt:
+        #       - "MyDLQQueue"
+        #       - "Arn"
+        #   maxReceiveCount: 3
         QueueName: "MyQueue"
     
     MyDLQQueue:
